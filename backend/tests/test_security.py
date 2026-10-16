@@ -189,7 +189,11 @@ class SecurityTests(SupportCase):
                 with patch.dict(os.environ, {"KG_ENV": "production", "KG_ALLOWED_ORIGINS": origin}):
                     settings.cache_clear()
                     with self.assertRaises(RuntimeError): settings()
-            with patch.dict(os.environ, {"KG_ENV": "production", "KG_ALLOWED_ORIGINS": "https://localhost"}):
+            with patch.dict(os.environ, {
+    "KG_ENV": "production",
+    "KG_ALLOWED_ORIGINS": "https://localhost",
+    "KG_ALLOWED_HOSTS": "localhost",
+}):
                 settings.cache_clear()
                 self.assertEqual(self.raw("GET", "/health")[0], 400)
                 status, _, headers = self.raw("POST", "/api/auth/login", {"username": "cashier", "password": self.password}, {"origin": "https://localhost"}, "https")
