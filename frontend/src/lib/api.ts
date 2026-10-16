@@ -18,19 +18,38 @@ export class ApiError extends Error {
 }
 
 async function readResponse<T>(response: Response): Promise<T> {
+  const contentType = response.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
+
   if (!response.ok) {
     if (response.status === 401) {
       csrfToken = null;
       window.dispatchEvent(new Event("staff-session-expired"));
     }
-    const error = await response.json().catch(() => null);
-    const detail = error?.detail;
-    const message = typeof detail === "string" ? detail : Array.isArray(detail)
-      ? detail.map((item: { msg?: string }) => item.msg ?? "Invalid input").join(". ")
-      : `Request failed: ${response.status}`;
+    let message = `Request failed: ${response.status}`;
+    if (isJson) {
+      const error = await response.json().catch(() => null);
+      const detail = error?.detail;
+      message = typeof detail === "string" ? detail : Array.isArray(detail)
+        ? detail.map((item: { msg?: string }) => item.msg ?? "Invalid input").join(". ")
+        : message;
+    } else {
+      // Non-JSON (likely HTML from wrong origin or proxy failure)
+      const text = await response.text().catch(() => "");
+      if (text.trim().startsWith("<!doctype") || text.trim().startsWith("<html")) {
+        message = "Received HTML instead of API response. Check network or app configuration.";
+      }
+    }
     throw new ApiError(message, response.status);
   }
   if (response.status === 204) return undefined as T;
+  if (!isJson) {
+    const text = await response.text().catch(() => "");
+    if (text.trim().startsWith("<!doctype") || text.trim().startsWith("<html")) {
+      throw new ApiError("Received HTML instead of API response. The app may be loading from the wrong origin.", response.status);
+    }
+    throw new ApiError("Expected JSON response but received non-JSON content.", response.status);
+  }
   return response.json() as Promise<T>;
 }
 
