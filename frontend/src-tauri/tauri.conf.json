@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "KING'S GRILLZ SmartPOS",
+  "productName": "Kings Grillz SmartPOS",
   "version": "0.1.0",
   "identifier": "com.kingsgrillz.smartpos",
   "build": {
