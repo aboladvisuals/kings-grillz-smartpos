@@ -228,3 +228,23 @@ Test a restore on a non-production database before relying on the backup.
 
 Current Render database expiry noted: 15 November 2026. Plan the paid upgrade or migration before that date.
 
+
+---
+
+## 12. Successful Build Artifacts (16 October 2026)
+
+**Android APK**
+- Run: https://github.com/aboladvisuals/kings-grillz-smartpos/actions/runs/38952651819
+- Artifact: `android-apk` (zip containing `app-debug.apk`, ~3.8 MB)
+- Download from the Actions run page under Artifacts
+
+**Windows Installer**
+- Run: https://github.com/aboladvisuals/kings-grillz-smartpos/actions/runs/38953168494
+- Artifact: `windows-installer` (zip containing NSIS `.exe` and/or MSI, ~4.8 MB)
+- Product name for installer: "Kings Grillz SmartPOS" (apostrophe removed to satisfy NSIS)
+- Download from the Actions run page under Artifacts
+
+Frontend checks (lint + tests + PWA verification) passed on the same commits.
+
+No production deployment or merge to main has been performed.
+
