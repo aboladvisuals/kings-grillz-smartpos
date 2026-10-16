@@ -1,0 +1,46 @@
+name: Frontend Checks
+
+on:
+  push:
+    branches: [feature/windows-mobile-release]
+  pull_request:
+    branches: [feature/windows-mobile-release]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Test
+        working-directory: frontend
+        run: npm test
+
+      - name: Verify PWA files
+        working-directory: frontend
+        run: |
+          test -f public/manifest.webmanifest
+          test -f public/sw.js
+          test -f public/icon-192.png
+          test -f public/icon-512.png
+          echo "PWA assets present"
+          npm run build
+          test -f dist/index.html
+          grep -q "manifest.webmanifest" dist/index.html || (echo "Manifest link missing" && exit 1)
+          echo "PWA ready in build"
