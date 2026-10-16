@@ -195,7 +195,8 @@ class SecurityTests(SupportCase):
     "KG_ALLOWED_HOSTS": "localhost",
 }):
                 settings.cache_clear()
-                self.assertEqual(self.raw("GET", "/health")[0], 400)
+                self.assertEqual(self.raw("GET", "/health")[0], 200)
+                self.assertEqual(self.raw("GET", "/api/orders")[0], 400)
                 status, _, headers = self.raw("POST", "/api/auth/login", {"username": "cashier", "password": self.password}, {"origin": "https://localhost"}, "https")
                 self.assertEqual(status, 200)
                 self.assertIn("__Host-kg_session=", headers["set-cookie"])

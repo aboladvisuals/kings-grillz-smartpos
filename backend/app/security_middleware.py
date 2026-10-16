@@ -26,7 +26,14 @@ class SecurityHeaders:
                 message["headers"] = headers
             await send(message)
 
-        if settings().production and scope.get("scheme") != "https":
+        if (
+    settings().production
+    and scope.get("scheme") != "https"
+    and not (
+        scope.get("method") == "GET"
+        and scope.get("path") == "/health"
+    )
+):
             return await JSONResponse({"detail": "HTTPS is required"}, 400)(scope, receive, secure_send)
         if scope["method"] in {"POST", "PATCH", "PUT", "DELETE"}:
             headers = dict(scope["headers"])
