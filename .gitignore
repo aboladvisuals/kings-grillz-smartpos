@@ -1,0 +1,29 @@
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# Database and backups
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.bak
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Frontend
+node_modules/
+dist/
+coverage/
+
+# Editor and OS
+.vscode/
+.DS_Store
+Thumbs.db
