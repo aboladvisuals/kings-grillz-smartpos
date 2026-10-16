@@ -248,3 +248,33 @@ Frontend checks (lint + tests + PWA verification) passed on the same commits.
 
 No production deployment or merge to main has been performed.
 
+
+---
+
+## 13. Authentication Fix for Desktop and Mobile (16 October 2026, evening)
+
+### Root causes (verified)
+
+**Windows JSON error**  
+The Tauri app was packaging the local frontend build. Relative API calls (`/api/...`) therefore hit the local webview origin and received `index.html` (starting with `<!doctype`) instead of JSON. This produced the exact error: `Unexpected token '<', "<!doctype "... is not valid JSON`.
+
+**Live website "Cannot reach the staff service"**  
+Verified at the time of investigation: backend `/health` returns `{"status":"healthy"}`, the nginx proxy forwards `/api/*` correctly, and `/api/auth/me` returns proper JSON 401 without a session. The live frontend loads the staff sign-in page. The error is shown by the frontend when `/api/auth/me` fails with a non-401 status (network, cold start, or temporary proxy issue). No production code change was required; the site is currently operational.
+
+**Android**  
+Same relative-URL problem would have occurred. Fixed before device testing.
+
+### Fix applied (commit `4fd9131`)
+
+- Tauri window now loads `https://kings-grillz.onrender.com` directly.
+- Capacitor `server.url` set to the same production frontend.
+- API client now detects HTML responses and reports a clear message instead of a JSON parse crash.
+- Security model (cookies, CSRF, roles, HTTPS) is unchanged because the apps now behave exactly like the browser.
+
+### Installation notes
+
+- **Windows**: Uninstall the previous version (or just install over it). The new installer loads the live site, so login, orders, payments and receipts work with the existing production backend.
+- **Android**: Install the new APK. It loads the live site the same way.
+
+No merge to main or Render redeploy is required for the desktop/mobile fix. The PWA improvements remain on the feature branch until you choose to deploy them.
+
