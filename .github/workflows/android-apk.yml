@@ -26,7 +26,9 @@ jobs:
           java-version: 21
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v3.2.0
+        with:
+          packages: 'platforms;android-34 build-tools;34.0.0'
 
       - name: Install frontend dependencies
         working-directory: frontend
