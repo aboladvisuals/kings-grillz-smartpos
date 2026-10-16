@@ -278,3 +278,36 @@ Same relative-URL problem would have occurred. Fixed before device testing.
 
 No merge to main or Render redeploy is required for the desktop/mobile fix. The PWA improvements remain on the feature branch until you choose to deploy them.
 
+
+---
+
+## 14. Corrected Windows Fix — frontendDist (16 October 2026, late)
+
+### Why the previous installer still failed
+
+The earlier change only set `app.windows[0].url`. In Tauri v2, when `build.frontendDist` is a local path (`../dist`), the CLI embeds those assets into the binary and the WebView loads them from the local protocol (`http://tauri.localhost` on Windows). The window-level `url` is ignored or overridden. Relative `/api` calls therefore still received the local `index.html`, producing the same `Unexpected token '<'` error.
+
+### Actual fix (commit `5166683`)
+
+`build.frontendDist` is now set to `https://kings-grillz.onrender.com`.
+
+Per Tauri documentation, when `frontendDist` is a URL:
+- No local assets are embedded.
+- The application loads that URL by default.
+
+The packaged app is now a thin WebView2 shell around the live production site. Cookies, CSRF and the nginx `/api` proxy behave exactly as in a normal browser.
+
+### Testing the new installer
+
+1. Uninstall the previous Kings Grillz SmartPOS completely (Settings → Apps).
+2. Download the new `windows-installer` artifact from the latest successful "Build Windows Tauri Installer" run on branch `feature/windows-mobile-release`.
+3. Install and launch.
+4. You should see the same staff sign-in page as https://kings-grillz.onrender.com.
+5. Optional diagnostic: press Ctrl+Shift+I (or right-click → Inspect) and check the address bar / Network tab. Requests to `/api/*` should go to `kings-grillz.onrender.com` and return JSON, not HTML.
+
+### Android
+
+The Capacitor `server.url` was already set to the production frontend and the AndroidManifest includes `INTERNET`. The latest APK should load the live site the same way. Install the newest `android-apk` artifact and test. If it still shows local content, report the exact error.
+
+No production deploy or merge to main is required for this fix.
+
