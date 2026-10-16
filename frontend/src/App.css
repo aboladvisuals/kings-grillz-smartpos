@@ -478,3 +478,38 @@ td {
   .new-order-panel { padding: 15px; }
   .form-grid { grid-template-columns: 1fr; }
 }
+
+/* Mobile / PWA responsive improvements */
+@media (max-width: 768px) {
+  .app-shell {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    padding: 16px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+  .brand {
+    margin-bottom: 0;
+    flex: 1;
+  }
+  .sidebar nav,
+  .sidebar .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+  .main-content {
+    padding: 16px;
+  }
+}
+
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+  }
+}
