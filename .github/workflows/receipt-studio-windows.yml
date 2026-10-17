@@ -21,13 +21,30 @@ jobs:
           python-version: "3.12"
       - name: Install dependencies
         run: pip install -r requirements.txt
-      - name: Run tests
+      - name: Run unit tests
         run: python -m unittest discover -s tests -v
       - name: Build Windows app
         run: >
           pyinstaller --noconfirm --windowed --name KingsGrillzReceiptStudio
           --add-data "assets;assets"
-          kings_grillz/__main__.py
+          --hidden-import kings_grillz.app
+          --hidden-import kings_grillz.database
+          --hidden-import kings_grillz.pdf
+          --hidden-import kings_grillz.png
+          --paths .
+          launcher.py
+      - name: Smoke-test packaged EXE
+        shell: pwsh
+        run: |
+          $exe = "dist\KingsGrillzReceiptStudio\KingsGrillzReceiptStudio.exe"
+          if (-not (Test-Path $exe)) { throw "EXE not found: $exe" }
+          $proc = Start-Process -FilePath $exe -PassThru
+          Start-Sleep -Seconds 8
+          if ($proc.HasExited) {
+            throw "EXE exited immediately with code $($proc.ExitCode)"
+          }
+          Stop-Process -Id $proc.Id -Force
+          Write-Host "EXE stayed running for 8 seconds — startup OK"
       - name: Upload Windows app
         uses: actions/upload-artifact@v4
         with:
