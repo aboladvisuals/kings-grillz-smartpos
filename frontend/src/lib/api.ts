@@ -155,9 +155,24 @@ export type CreatedOrder = {
   order_status: string;
 };
 
-/** Download or share a file. Android WebView cannot render PDFs and ignores
- *  the download attribute, so we use the system share sheet there. Desktop and
- *  web keep a normal browser download. */
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || "");
+      const comma = result.indexOf(",");
+      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+    };
+    reader.onerror = () => reject(new Error("Could not read the downloaded file."));
+    reader.readAsDataURL(blob);
+  });
+}
+
+/** Download or share a file.
+ *  Android WebView 83 cannot render PDFs and ignores <a download>.
+ *  Web Share after an await is also rejected (user-gesture lost).
+ *  In the Capacitor app we write the file and open the native share sheet.
+ *  Desktop and web keep a normal browser download. */
 export async function downloadFile(path: string, filename: string): Promise<void> {
   const response = await fetch(`${API_BASE}${path}`, {
     credentials: "same-origin",
@@ -176,24 +191,46 @@ export async function downloadFile(path: string, filename: string): Promise<void
     throw new ApiError(`Download failed: ${response.status}`, response.status);
   }
   const blob = await response.blob();
+  if (!blob.size) throw new Error("The server returned an empty file.");
   const type = response.headers.get("content-type") || blob.type || "application/octet-stream";
-  const file = new File([blob], filename, { type });
 
-  const isAndroid = /Android/i.test(navigator.userAgent);
-  const canShare = typeof navigator.share === "function"
-    && (typeof navigator.canShare !== "function" || navigator.canShare({ files: [file] }));
-
-  if (isAndroid && canShare) {
-    await navigator.share({ files: [file], title: filename });
+  const cap = (window as Window & { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor;
+  if (cap?.isNativePlatform?.()) {
+    const { Filesystem, Directory } = await import("@capacitor/filesystem");
+    const { Share } = await import("@capacitor/share");
+    const base64 = await blobToBase64(blob);
+    const written = await Filesystem.writeFile({
+      path: filename,
+      data: base64,
+      directory: Directory.Cache,
+    });
+    await Share.share({
+      title: filename,
+      text: filename,
+      url: written.uri,
+      dialogTitle: "Save or share receipt",
+    });
     return;
   }
 
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  if (!isAndroid) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return;
+  }
+
+  // Android browser (not the app): try share, otherwise explain.
+  const file = new File([blob], filename, { type });
+  if (typeof navigator.share === "function" && navigator.canShare?.({ files: [file] })) {
+    await navigator.share({ files: [file], title: filename });
+    return;
+  }
+  throw new Error("This Android browser cannot save the file. Use the updated app or a desktop browser.");
 }
