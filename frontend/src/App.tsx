@@ -10,9 +10,10 @@ import type { Order, OrderDetails, Staff } from "./lib/api";
 import NewOrder from "./NewOrder";
 import PaymentPanel from "./PaymentPanel";
 import OrderStatusPanel from "./OrderStatusPanel";
+import ProductPricing from "./ProductPricing";
 import "./App.css";
 
-type Section = "dashboard" | "orders" | "payments" | "new-order";
+type Section = "dashboard" | "orders" | "payments" | "new-order" | "pricing";
 
 export default function App({ staff }: { staff: Staff }) {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -106,7 +107,7 @@ export default function App({ staff }: { staff: Staff }) {
   const title = section === "dashboard" ? "Dashboard"
     : section === "orders" ? "Order Management"
     : section === "payments" ? "Payment Overview"
-    : "Create New Order";
+    : section === "pricing" ? "Product Pricing" : "Create New Order";
 
   return (
     <div className="app-shell">
@@ -143,6 +144,14 @@ export default function App({ staff }: { staff: Staff }) {
           >
             <Wallet size={19} /> Payments
           </button>
+          {staff.role === "admin" && (
+            <button
+              className={section === "pricing" ? "active" : ""}
+              onClick={() => setSection("pricing")}
+            >
+              <Wallet size={19} /> Pricing
+            </button>
+          )}
         </nav>
 
         <div className="sidebar-bottom">
@@ -174,7 +183,9 @@ export default function App({ staff }: { staff: Staff }) {
 
         {error && <div className="error-banner">{error}</div>}
 
-        {section === "new-order" ? (
+        {section === "pricing" && staff.role === "admin" ? (
+          <ProductPricing />
+        ) : section === "new-order" ? (
           <NewOrder
             onBack={() => setSection("dashboard")}
             onCreated={id => { void handleOrderCreated(id); }}

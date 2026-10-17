@@ -345,3 +345,17 @@ These features live in the backend and frontend source. Because the Windows and 
 
 Do not merge to main or deploy to Render until you have reviewed and approved.
 
+
+---
+
+## 16. Pre-production completion (17 October 2026)
+
+- Native Windows Tauri and Android Capacitor icons regenerated from the official logo.
+- PDF invoice and PDF payment receipt generators now include the official logo (same as PNG).
+- Admin-only Product Pricing screen added to the frontend. Visible only when staff.role === "admin". Backend endpoint remains admin-only (403 for others).
+- Invoice PDF and PNG download controls are present in the order list. Payment receipt PDF/PNG endpoints exist; receipt download buttons appear in the payment flow where a confirmed payment exists.
+- Backend test suite: 26 tests passed on isolated in-memory SQLite (authentication, pricing, historical prices, delivery fee, PNG generation, security).
+- Frontend build and lint verified after the TypeScript fix.
+
+No production data was modified. No migration is required.
+

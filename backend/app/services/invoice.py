@@ -19,6 +19,7 @@ from reportlab.platypus import (
     Table,
     TableStyle,
     KeepTogether,
+    Image,
 )
 
 
@@ -177,6 +178,11 @@ def generate_invoice(order, customer, product):
         return Paragraph(safe(value), styles[style])
 
     story = []
+    logo_path = Path(__file__).parent.parent / "assets" / "logo.png"
+    if logo_path.exists():
+        story.append(Image(str(logo_path), width=40*mm, height=40*mm, hAlign="CENTER"))
+        story.append(Spacer(1, 6*mm))
+
 
     # HEADER
     story.append(
