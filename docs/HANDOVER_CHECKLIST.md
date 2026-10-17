@@ -4,8 +4,8 @@ Version 1.0.0. Active product is the offline Receipt Studio.
 
 ## Delivered
 
-- Windows installer: GitHub Release `v1.0.0`
-- Android signed release APK: GitHub Release `v1.0.0`
+- Windows installer: https://github.com/aboladvisuals/kings-grillz-smartpos/releases/download/v1.0.0/KingsGrillzReceiptStudio-Setup-1.0.0.exe
+- Android signed release APK: https://github.com/aboladvisuals/kings-grillz-smartpos/releases/download/v1.0.0/KingsGrillzReceiptStudio-1.0.0.apk
 - Source on `main`: `receipt-studio/`, `android-receipt-studio/`, `docs/`
 - Archive of the old cloud SmartPOS: branch `archive/smartpos-cloud-2026-10-17`, tag `archive-smartpos-cloud-2026-10-17`
 - Customer guide: `docs/CUSTOMER_GUIDE.md`
