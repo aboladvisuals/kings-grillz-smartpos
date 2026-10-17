@@ -154,3 +154,46 @@ export type CreatedOrder = {
   payment_status: string;
   order_status: string;
 };
+
+/** Download or share a file. Android WebView cannot render PDFs and ignores
+ *  the download attribute, so we use the system share sheet there. Desktop and
+ *  web keep a normal browser download. */
+export async function downloadFile(path: string, filename: string): Promise<void> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    credentials: "same-origin",
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    const contentType = response.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      const error = await response.json().catch(() => null);
+      const detail = error?.detail;
+      throw new ApiError(
+        typeof detail === "string" ? detail : `Download failed: ${response.status}`,
+        response.status,
+      );
+    }
+    throw new ApiError(`Download failed: ${response.status}`, response.status);
+  }
+  const blob = await response.blob();
+  const type = response.headers.get("content-type") || blob.type || "application/octet-stream";
+  const file = new File([blob], filename, { type });
+
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const canShare = typeof navigator.share === "function"
+    && (typeof navigator.canShare !== "function" || navigator.canShare({ files: [file] }));
+
+  if (isAndroid && canShare) {
+    await navigator.share({ files: [file], title: filename });
+    return;
+  }
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}

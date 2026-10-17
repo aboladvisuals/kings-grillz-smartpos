@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { API_BASE, apiGet, apiSend, money } from "./lib/api";
+import { apiGet, apiSend, money, downloadFile } from "./lib/api";
 
 type Payment = {
   payment_id: number;
@@ -184,13 +184,12 @@ export default function PaymentPanel({
                 </small>
               </div>
 
-              <a
-                href={`${API_BASE}/api/payments/${payment.payment_id}/receipt`}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                type="button"
+                onClick={() => void downloadFile(`/api/payments/${payment.payment_id}/receipt`, `receipt-${payment.payment_id}.pdf`).catch(err => setError(err instanceof Error ? err.message : "Receipt download failed"))}
               >
                 PDF Receipt
-              </a>
+              </button>
             </div>
           ))}
         </div>
