@@ -1,3 +1,11 @@
+# Historical SmartPOS security notes
+
+This file describes the archived cloud SmartPOS staff-login system.
+Receipt Studio is the active product and does not use login, cookies, or a remote API.
+See the repository README and `archive/smartpos-cloud-2026-10-17`.
+
+---
+
 # KING'S GRILLZ staff security
 
 Status: implemented locally; public deployment is not authorized or approved.
