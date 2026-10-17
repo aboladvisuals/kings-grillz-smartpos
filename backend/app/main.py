@@ -9,7 +9,7 @@ from app.database import engine
 from app.security import Staff, audit, initialize_security, require_staff, require_payment_staff, settings
 from app.auth import router as auth_router
 from app.security_middleware import SecurityHeaders
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 from app.services.receipt import generate_receipt
 from app.database import get_db
@@ -28,6 +28,7 @@ from app.schemas.order import OrderCreate
 
 from fastapi.responses import StreamingResponse
 from app.services.invoice import generate_invoice
+from app.services.images import generate_receipt_image, generate_invoice_image
 from sqlalchemy.exc import IntegrityError
 from app.models.payment import Payment
 from app.schemas.payment import PaymentCreate
@@ -142,7 +143,13 @@ def create_order(
         db.add(customer)
         db.flush()
 
-    subtotal = product.price * payload.quantity
+    # Use agreed unit price if supplied and authorised; otherwise catalogue price.
+    # Historical orders keep the price stored at creation time.
+    unit_price = payload.unit_price if payload.unit_price is not None else product.price
+    if unit_price < 0:
+        raise HTTPException(status_code=400, detail="Unit price must be non-negative")
+
+    subtotal = unit_price * payload.quantity
     total = subtotal + payload.delivery_fee
 
     order = Order(
@@ -150,7 +157,7 @@ def create_order(
         customer_id=customer.id,
         product_id=product.id,
         quantity=payload.quantity,
-        unit_price=product.price,
+        unit_price=unit_price,
         preparation=payload.preparation,
         fulfilment=payload.fulfilment,
         delivery_provider=payload.delivery_provider,
@@ -636,3 +643,68 @@ def update_order_status(
         "payment_status": order.payment_status,
         "balance": order.total - order.amount_paid,
     }
+
+
+@app.get("/api/orders/{order_id}/invoice.png")
+def download_invoice_image(
+    order_id: int,
+    db: Session = Depends(get_db),
+):
+    order = db.get(Order, order_id)
+    if order is None:
+        raise HTTPException(status_code=404, detail="Order not found")
+    customer = db.get(Customer, order.customer_id)
+    product = db.get(Product, order.product_id)
+    if customer is None or product is None:
+        raise HTTPException(status_code=404, detail="Related record missing")
+    image = generate_invoice_image(order, customer, product)
+    return StreamingResponse(
+        image,
+        media_type="image/png",
+        headers={"Content-Disposition": f'attachment; filename="{order.order_number}-invoice.png"'},
+    )
+
+
+@app.get("/api/payments/{payment_id}/receipt.png")
+def download_receipt_image(
+    payment_id: int,
+    db: Session = Depends(get_db),
+):
+    payment = db.get(Payment, payment_id)
+    if payment is None or payment.status != "confirmed":
+        raise HTTPException(status_code=404, detail="Confirmed payment not found")
+    order = db.get(Order, payment.order_id)
+    customer = db.get(Customer, order.customer_id) if order else None
+    if order is None or customer is None:
+        raise HTTPException(status_code=404, detail="Related record missing")
+    payment._balance_after = order.total - order.amount_paid
+    image = generate_receipt_image(payment, order, customer)
+    return StreamingResponse(
+        image,
+        media_type="image/png",
+        headers={"Content-Disposition": f'attachment; filename="KG-R-{payment.id:05d}.png"'},
+    )
+
+
+class ProductPriceUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    price: int = Field(ge=0, le=1000000000)
+
+
+@app.patch("/api/products/{product_id}/price")
+def update_product_price(
+    product_id: int,
+    payload: ProductPriceUpdate,
+    db: Session = Depends(get_db),
+    staff: Staff = Depends(require_staff),
+):
+    if staff.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin permission required")
+    product = db.get(Product, product_id)
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found")
+    old_price = product.price
+    product.price = payload.price
+    audit(db, staff.id, "product_price_updated", product.id)
+    db.commit()
+    return {"id": product.id, "name": product.name, "old_price": old_price, "price": product.price}

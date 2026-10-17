@@ -29,6 +29,7 @@ export default function NewOrder({ onBack, onCreated }: Props) {
     useState<"inDrive" | "Company Rider">("inDrive");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryFee, setDeliveryFee] = useState(0);
+  const [unitPrice, setUnitPrice] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -37,13 +38,17 @@ export default function NewOrder({ onBack, onCreated }: Props) {
       .then((data) => {
         const available = data.filter((item) => item.available);
         setProducts(available);
-        if (available.length) setProductId(available[0].id);
+        if (available.length) {
+          setProductId(available[0].id);
+          setUnitPrice(available[0].price);
+        }
       })
       .catch(() => setError("Could not load products."));
   }, []);
 
   const product = products.find((item) => item.id === productId);
-  const subtotal = (product?.price ?? 0) * quantity;
+  const effectivePrice = unitPrice > 0 ? unitPrice : (product?.price ?? 0);
+  const subtotal = effectivePrice * quantity;
   const total = subtotal + (fulfilment === "Delivery" ? deliveryFee : 0);
 
   async function submitOrder(event: React.FormEvent<HTMLFormElement>) {
@@ -67,6 +72,7 @@ export default function NewOrder({ onBack, onCreated }: Props) {
       delivery_address:
         fulfilment === "Delivery" ? deliveryAddress.trim() : null,
       delivery_fee: fulfilment === "Delivery" ? deliveryFee : 0,
+      unit_price: effectivePrice,
     };
 
     setSubmitting(true);
@@ -137,6 +143,17 @@ export default function NewOrder({ onBack, onCreated }: Props) {
                 </option>
               ))}
             </select>
+          </label>
+
+          <label>
+            Unit Price (₦)
+            <input
+              type="number"
+              min={0}
+              required
+              value={unitPrice}
+              onChange={(e) => setUnitPrice(Number(e.target.value))}
+            />
           </label>
 
           <label>

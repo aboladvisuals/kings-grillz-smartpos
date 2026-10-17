@@ -311,3 +311,37 @@ The Capacitor `server.url` was already set to the production frontend and the An
 
 No production deploy or merge to main is required for this fix.
 
+
+---
+
+## 15. Customer Change Requests (17 October 2026)
+
+### Official logo
+The supplied KING’S GRILLZ logo has been integrated into:
+- Staff sign-in page
+- Dashboard sidebar
+- PWA icons and favicon
+- Receipt and invoice PNG generators
+
+Windows and Android app icons still use the previous generated set. The next installer rebuild will pick up any updated icons if they are replaced in the Tauri/Capacitor icon folders.
+
+### Receipts and invoices — PDF and picture
+- Existing PDF endpoints remain: `/api/orders/{id}/invoice` and `/api/payments/{id}/receipt`
+- New picture endpoints:
+  - `/api/orders/{id}/invoice.png`
+  - `/api/payments/{id}/receipt.png`
+- Pictures are generated with Pillow and include the logo, order number, customer, quantities, prices, delivery, totals and payment status.
+- WhatsApp sharing remains a text link plus manual attachment of the downloaded picture or PDF (native share-sheet attachment is not guaranteed on all platforms).
+
+### Editable prices and delivery charges
+- Catalogue product price can be updated by an admin via `PATCH /api/products/{id}/price`.
+- Order creation accepts an optional `unit_price`. If omitted, the current catalogue price is used.
+- Delivery fee is already accepted on order creation and can be any non-negative amount (including 0).
+- The agreed unit price and delivery fee are stored on the order at creation time. Later catalogue price changes do not alter existing orders.
+- Frontend New Order form now shows an editable Unit Price field that defaults to the current product price.
+
+### Production deployment required
+These features live in the backend and frontend source. Because the Windows and Android apps load the live site, the new UI and endpoints will only appear after a controlled production deployment of this branch.
+
+Do not merge to main or deploy to Render until you have reviewed and approved.
+

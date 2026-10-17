@@ -112,7 +112,7 @@ export default function App({ staff }: { staff: Staff }) {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-icon"><Flame size={26} /></div>
+          <img src="/logo.png" alt="" style={{width: 48, height: 48, borderRadius: "50%"}} />
           <div><strong>KING'S GRILLZ</strong><span>SMARTPOS</span></div>
         </div>
 
@@ -265,8 +265,16 @@ export default function App({ staff }: { staff: Staff }) {
                         <td>
                           <div className="row-actions">
                             <a
-                              title="Download invoice"
+                              title="Download invoice PDF"
                               href={`${API_BASE}/api/orders/${order.id}/invoice`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <FileText size={17} />
+                            </a>
+                            <a
+                              title="Download invoice picture"
+                              href={`${API_BASE}/api/orders/${order.id}/invoice.png`}
                               target="_blank"
                               rel="noreferrer"
                             >

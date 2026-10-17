@@ -62,6 +62,7 @@ export type Order = {
   fulfilment: string;
   subtotal: number;
   delivery_fee: number;
+  unit_price?: number;
   total: number;
   amount_paid: number;
   balance: number;
@@ -82,6 +83,7 @@ export type OrderDetails = {
   delivery_address: string | null;
   subtotal: number;
   delivery_fee: number;
+  unit_price?: number;
   total: number;
   amount_paid: number;
   balance: number;
@@ -138,6 +140,7 @@ export type NewOrderPayload = {
   delivery_provider?: "inDrive" | "Company Rider" | null;
   delivery_address?: string | null;
   delivery_fee: number;
+  unit_price?: number;
 };
 
 export type CreatedOrder = {
@@ -149,6 +152,7 @@ export type CreatedOrder = {
   unit_price: number;
   subtotal: number;
   delivery_fee: number;
+  unit_price?: number;
   total: number;
   payment_status: string;
   order_status: string;
