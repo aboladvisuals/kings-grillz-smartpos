@@ -23,7 +23,11 @@ python -m unittest discover -s tests -v
 python -m kings_grillz
 ```
 
-See `receipt-studio/USER_GUIDE.md` for staff instructions.
+Android APK: workflow `Build Receipt Studio Android`, artifact `kings-grillz-receipt-studio-android`.
+
+Windows and Android histories are separate. See `docs/CUSTOMER_GUIDE.md`.
+
+See `receipt-studio/USER_GUIDE.md` for the Windows staff guide.
 
 ## What is archived
 
