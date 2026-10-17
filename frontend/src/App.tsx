@@ -5,7 +5,7 @@ import {
   FileText, MessageCircle, Flame, TrendingUp,
   Clock, CheckCircle2, Plus
 } from "lucide-react";
-import { apiGet, money, API_BASE } from "./lib/api";
+import { apiGet, money, downloadFile } from "./lib/api";
 import type { Order, OrderDetails, Staff } from "./lib/api";
 import NewOrder from "./NewOrder";
 import PaymentPanel from "./PaymentPanel";
@@ -275,20 +275,18 @@ export default function App({ staff }: { staff: Staff }) {
                         </td>
                         <td>
                           <div className="row-actions">
-                            <a
+                            <button
                               title="Download invoice PDF"
-                              href={`${API_BASE}/api/orders/${order.id}/invoice`}
-                              download
+                              onClick={() => void downloadFile(`/api/orders/${order.id}/invoice`, `${order.order_number}.pdf`).catch(err => setError(err instanceof Error ? err.message : "PDF download failed"))}
                             >
                               <FileText size={17} />
-                            </a>
-                            <a
+                            </button>
+                            <button
                               title="Download invoice picture"
-                              href={`${API_BASE}/api/orders/${order.id}/invoice.png`}
-                              download
+                              onClick={() => void downloadFile(`/api/orders/${order.id}/invoice.png`, `${order.order_number}-invoice.png`).catch(err => setError(err instanceof Error ? err.message : "Image download failed"))}
                             >
                               <FileText size={17} />
-                            </a>
+                            </button>
                             <button
                               title="Share via WhatsApp"
                               onClick={() => void openWhatsApp(order.id)}
