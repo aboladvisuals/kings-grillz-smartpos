@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">KING\'S GRILLZ SmartPOS</string>
-    <string name="title_activity_main">KING\'S GRILLZ SmartPOS</string>
-    <string name="package_name">com.kingsgrillz.smartpos</string>
-    <string name="custom_url_scheme">com.kingsgrillz.smartpos</string>
-</resources>
