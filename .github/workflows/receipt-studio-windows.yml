@@ -48,7 +48,9 @@ jobs:
       - name: Install Inno Setup
         run: choco install innosetup -y
       - name: Build installer
-        run: "& 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' installer\ReceiptStudio.iss"
+        shell: pwsh
+        run: |
+          & "$env:ProgramFiles(x86)\Inno Setup 6\ISCC.exe" installer\ReceiptStudio.iss
       - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
