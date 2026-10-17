@@ -47,10 +47,18 @@ class Settings:
     business_note: str = "Thank you for choosing KING'S GRILLZ!"
 
 
-def connect(path: Path | None = None) -> sqlite3.Connection:
+class Connection(sqlite3.Connection):
+    def __exit__(self, exc_type, exc, tb):
+        try:
+            super().__exit__(exc_type, exc, tb)
+        finally:
+            self.close()
+
+
+def connect(path: Path | None = None) -> Connection:
     db = path or database_path()
     db.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(db)
+    conn = sqlite3.connect(db, factory=Connection)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn

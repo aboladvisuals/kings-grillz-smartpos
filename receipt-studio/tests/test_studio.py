@@ -42,7 +42,7 @@ def sample(kind="invoice"):
 
 class StudioTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
+        self.tmp = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
         self.db = Path(self.tmp.name) / "receipts.db"
         init_db(self.db)
 
