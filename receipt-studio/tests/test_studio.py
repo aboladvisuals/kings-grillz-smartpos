@@ -104,3 +104,29 @@ class StudioTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ShareTests(unittest.TestCase):
+    def test_nigerian_local_number(self):
+        from kings_grillz.share import normalize_whatsapp_number
+        self.assertEqual(normalize_whatsapp_number("08012345678"), "2348012345678")
+
+    def test_already_international(self):
+        from kings_grillz.share import normalize_whatsapp_number
+        self.assertEqual(normalize_whatsapp_number("+234 801 234 5678"), "2348012345678")
+
+    def test_message_contains_number_and_total(self):
+        from kings_grillz.share import receipt_message
+        from kings_grillz.database import Document
+        doc = Document(
+            id=1, number="KG-20261017-0001", kind="invoice",
+            customer_name="Ada", customer_phone="08012345678",
+            product_name="Signature Smoked Guinea Fowl", quantity=1,
+            unit_price=14000, preparation="Whole", fulfilment="Pickup",
+            delivery_fee=0, subtotal=14000, total=14000, amount_paid=0,
+            payment_status="unpaid", notes="", created_at="2026-10-17T20:00:00",
+        )
+        text = receipt_message(doc)
+        self.assertIn("KG-20261017-0001", text)
+        self.assertIn("₦14,000", text)
+        self.assertIn("Ada", text)

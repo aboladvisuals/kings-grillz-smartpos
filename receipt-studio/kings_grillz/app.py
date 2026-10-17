@@ -5,8 +5,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon, QPixmap
+from PySide6.QtCore import Qt, QUrl
+from PySide6.QtGui import QDesktopServices, QIcon, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -42,6 +42,7 @@ from .database import (
 from .paths import export_dir, logo_path
 from .pdf import naira, write_pdf
 from .png import write_png
+from .share import open_folder, open_whatsapp
 
 
 STYLE = """
@@ -181,15 +182,22 @@ class Studio(QMainWindow):
         actions = QHBoxLayout()
         save_pdf = QPushButton("Save PDF")
         save_png = QPushButton("Save PNG")
-        save_both = QPushButton("Save PDF + PNG")
+        save_as = QPushButton("Save As…")
+        share = QPushButton("Share to WhatsApp")
         save_pdf.clicked.connect(lambda: self.create_document("pdf"))
         save_png.clicked.connect(lambda: self.create_document("png"))
-        save_both.clicked.connect(lambda: self.create_document("both"))
+        save_as.clicked.connect(self.save_as_new)
+        share.clicked.connect(self.create_and_share)
         actions.addWidget(save_pdf)
         actions.addWidget(save_png)
-        actions.addWidget(save_both)
+        actions.addWidget(save_as)
+        actions.addWidget(share)
         actions.addStretch()
         layout.addLayout(actions)
+        tip = QLabel("WhatsApp opens the message. Attach the PDF from the folder that opens — Windows cannot attach it automatically.")
+        tip.setWordWrap(True)
+        tip.setStyleSheet("color: #666;")
+        layout.addWidget(tip)
         layout.addStretch()
         self.update_total()
         return page
@@ -277,6 +285,8 @@ class Studio(QMainWindow):
         for label, handler in (
             ("Reprint PDF", self.reprint_pdf),
             ("Reprint PNG", self.reprint_png),
+            ("Save As…", self.save_as_selected),
+            ("Share to WhatsApp", self.share_selected),
             ("Mark paid", self.mark_selected_paid),
             ("Backup", self.do_backup),
             ("Restore", self.do_restore),
@@ -311,7 +321,77 @@ class Studio(QMainWindow):
         docs = list_documents()
         return next((doc for doc in docs if doc.id == doc_id), None)
 
+    def save_as_new(self) -> None:
+        try:
+            payload = self._payload()
+        except ValueError as exc:
+            QMessageBox.warning(self, "Missing details", str(exc))
+            return
+        chosen, selected = QFileDialog.getSaveFileName(
+            self, "Save receipt", f"{payload['customer_name']}.pdf", "PDF (*.pdf);;PNG (*.png)"
+        )
+        if not chosen:
+            return
+        document = save_document(payload)
+        path = Path(chosen)
+        if path.suffix.lower() == ".png" or "png" in selected.lower():
+            write_png(document, path if path.suffix else path.with_suffix(".png"))
+        else:
+            write_pdf(document, path if path.suffix else path.with_suffix(".pdf"))
+        self.refresh_history()
+        QMessageBox.information(self, "Saved", f"{document.number} saved to:\n{path}")
+
+    def create_and_share(self) -> None:
+        try:
+            payload = self._payload()
+        except ValueError as exc:
+            QMessageBox.warning(self, "Missing details", str(exc))
+            return
+        document = save_document(payload)
+        pdf_path = write_pdf(document, export_dir() / f"{document.number}.pdf")
+        self.refresh_history()
+        self._share(document, pdf_path)
+
+    def save_as_selected(self) -> None:
+        doc = self._selected_doc()
+        if not doc:
+            return
+        chosen, selected = QFileDialog.getSaveFileName(
+            self, "Save receipt", f"{doc.number}.pdf", "PDF (*.pdf);;PNG (*.png)"
+        )
+        if not chosen:
+            return
+        path = Path(chosen)
+        if path.suffix.lower() == ".png" or "png" in selected.lower():
+            written = write_png(doc, path if path.suffix else path.with_suffix(".png"))
+        else:
+            written = write_pdf(doc, path if path.suffix else path.with_suffix(".pdf"))
+        QMessageBox.information(self, "Saved", str(written))
+
+    def share_selected(self) -> None:
+        doc = self._selected_doc()
+        if not doc:
+            return
+        pdf_path = write_pdf(doc, export_dir() / f"{doc.number}.pdf")
+        self._share(doc, pdf_path)
+
+    def _share(self, doc: Document, pdf_path: Path) -> None:
+        try:
+            open_whatsapp(doc)
+        except ValueError as exc:
+            QMessageBox.warning(self, "WhatsApp", str(exc))
+            return
+        open_folder(pdf_path)
+        QMessageBox.information(
+            self,
+            "Attach the PDF",
+            f"WhatsApp is opening with {doc.number} and the total.\n\n"
+            f"Windows cannot attach the PDF automatically.\n"
+            f"The receipt folder is open. Attach this file:\n{pdf_path.name}",
+        )
+
     def reprint_pdf(self) -> None:
+
         doc = self._selected_doc()
         if not doc:
             return
