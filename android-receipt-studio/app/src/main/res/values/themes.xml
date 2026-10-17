@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.ReceiptStudio" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">#171717</item>
+        <item name="colorPrimaryVariant">#171717</item>
+        <item name="colorSecondary">#D9A441</item>
+        <item name="android:statusBarColor">#171717</item>
+        <item name="android:windowBackground">#FAF7F0</item>
+    </style>
+</resources>
