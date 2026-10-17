@@ -1,16 +1,60 @@
 # KING'S GRILLZ Receipt Studio
 
-Offline Windows application for branded invoices and receipts.
+Offline invoices and receipts for a Nigerian smoked guinea fowl business. Version 1.0.0 was accepted by the client.
 
-No internet, login, or cloud service is required to create, save, or reprint receipts.
+No login, internet, or cloud service is required to create, save, or reprint a receipt.
 
-## Use the app
+## Download v1.0.0
 
-1. Download the Windows build from the [Receipt Studio workflow](https://github.com/aboladvisuals/kings-grillz-smartpos/actions/workflows/receipt-studio-windows.yml).
-2. Extract the artifact `kings-grillz-receipt-studio-windows`.
-3. Run `KingsGrillzReceiptStudio.exe`.
+- Windows installer: [KingsGrillzReceiptStudio-Setup-1.0.0.exe](https://github.com/aboladvisuals/kings-grillz-smartpos/releases/download/v1.0.0/KingsGrillzReceiptStudio-Setup-1.0.0.exe)
+- Signed Android APK: [KingsGrillzReceiptStudio-1.0.0.apk](https://github.com/aboladvisuals/kings-grillz-smartpos/releases/download/v1.0.0/KingsGrillzReceiptStudio-1.0.0.apk)
+- Release page: [v1.0.0](https://github.com/aboladvisuals/kings-grillz-smartpos/releases/tag/v1.0.0)
 
-Receipts are stored in `%APPDATA%\KingsGrillzReceiptStudio\`. Reinstalling the program does not erase history.
+## Install
+
+**Windows:** run the setup EXE. It installs under Program Files and adds a desktop shortcut. Receipts stay in `%APPDATA%\KingsGrillzReceiptStudio\`, so reinstalling does not erase history.
+
+**Android:** install the signed APK. Allow the browser or Files app if Android asks. Receipts stay in the app's private storage. Uninstalling the app deletes them unless you have a backup.
+
+## What it does offline
+
+- Create an unpaid invoice or a paid receipt. Nothing is marked paid automatically.
+- Product: Signature Smoked Guinea Fowl. Default price ₦14,000. Whole or Chopped. Pickup or Delivery.
+- Editable unit price and delivery fee.
+- Export a branded PDF and PNG.
+- Local history, search, and reprint.
+- Backup and restore on each device.
+- Share to WhatsApp. Windows opens the message and the PDF folder. Android uses the native share sheet and can attach the PDF.
+
+## Records are separate
+
+Windows and Android do not sync.
+
+| Device | Number example | Storage |
+| --- | --- | --- |
+| Windows | `KG-20261017-0001` | `%APPDATA%\KingsGrillzReceiptStudio\` |
+| Android | `KGA-20261017-0001` | App private files |
+
+Back up each device on its own. A Windows `.db` cannot restore an Android history, and the reverse is also true.
+
+Staff instructions: `docs/CUSTOMER_GUIDE.md`.
+
+## Technology
+
+| App | Stack |
+| --- | --- |
+| Windows | Python 3.12, PySide6, ReportLab, Pillow, SQLite, PyInstaller, Inno Setup |
+| Android | Kotlin, Android SDK 34, SQLite, PdfDocument, native share sheet |
+| Branding | Official circular logo. Black `#171717`, gold `#D9A441`, orange `#E66B24`, cream `#FAF7F0` |
+
+## Project structure
+
+```
+receipt-studio/          Windows app, tests, installer script
+android-receipt-studio/  Android app
+docs/                    Customer guide, case study, handover, retirement checklist
+.github/workflows/       Windows installer and Android APK builds
+```
 
 ## Develop
 
@@ -23,18 +67,11 @@ python -m unittest discover -s tests -v
 python -m kings_grillz
 ```
 
-Android APK: workflow `Build Receipt Studio Android`, artifact `kings-grillz-receipt-studio-android`.
+## Archived cloud product
 
-Windows and Android histories are separate. See `docs/CUSTOMER_GUIDE.md`.
+The earlier SmartPOS (React, FastAPI, Tauri, Capacitor, Render) is not the active product. It is preserved:
 
-See `receipt-studio/USER_GUIDE.md` for the Windows staff guide.
+- Branch: `archive/smartpos-cloud-2026-10-17`
+- Tag: `archive-smartpos-cloud-2026-10-17`
 
-## What is archived
-
-The previous cloud SmartPOS (React, FastAPI, Tauri, Capacitor, Render) is preserved and is not the active product.
-
-- Archive branch: `archive/smartpos-cloud-2026-10-17`
-- Archive tag: `archive-smartpos-cloud-2026-10-17`
-- Full Git history is retained
-
-Do not delete the archive, the repository, Render services, or the production PostgreSQL database without explicit approval. Production customer records still live only in that database.
+Do not delete the archive, this repository, the Render services, or the production PostgreSQL database without explicit approval. Customer records from the cloud period live only in that database. The free PostgreSQL instance expires on 15 November 2026.

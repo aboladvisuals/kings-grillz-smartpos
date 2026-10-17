@@ -1,6 +1,8 @@
 # KING'S GRILLZ Receipt Studio — Customer Guide
 
-Offline invoices and receipts for Windows and Android. No login and no internet are required to create a receipt.
+Offline invoices and receipts for Windows and Android, version 1.0.0. No login and no internet are required to create a receipt.
+
+Release: https://github.com/aboladvisuals/kings-grillz-smartpos/releases/tag/v1.0.0
 
 ## Important: records are separate
 
@@ -16,9 +18,9 @@ Back up each device separately.
 
 ## Windows
 
-1. Download the artifact `kings-grillz-receipt-studio-windows` from the Windows workflow.
-2. Extract the folder.
-3. Run `KingsGrillzReceiptStudio.exe`.
+1. Download [KingsGrillzReceiptStudio-Setup-1.0.0.exe](https://github.com/aboladvisuals/kings-grillz-smartpos/releases/download/v1.0.0/KingsGrillzReceiptStudio-Setup-1.0.0.exe).
+2. Run the installer.
+3. Open KING'S GRILLZ Receipt Studio from the desktop or Start menu.
 4. Enter customer name and phone, product, quantity and price.
 5. Choose Whole or Chopped, Pickup or Delivery, Invoice (unpaid) or Receipt (paid).
 6. Save PDF, Save PNG, Save As, or Share to WhatsApp.
@@ -29,7 +31,7 @@ WhatsApp opens the message. Attach the PDF from the folder that opens. Windows c
 
 ## Android
 
-1. Download `kings-grillz-receipt-studio-android` (`app-debug.apk`).
+1. Download the signed release [KingsGrillzReceiptStudio-1.0.0.apk](https://github.com/aboladvisuals/kings-grillz-smartpos/releases/download/v1.0.0/KingsGrillzReceiptStudio-1.0.0.apk).
 2. Allow install from the browser or Files if Android asks.
 3. Install and open KING'S GRILLZ.
 4. Create the invoice or receipt. It works with airplane mode on.
