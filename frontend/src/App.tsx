@@ -278,16 +278,14 @@ export default function App({ staff }: { staff: Staff }) {
                             <a
                               title="Download invoice PDF"
                               href={`${API_BASE}/api/orders/${order.id}/invoice`}
-                              target="_blank"
-                              rel="noreferrer"
+                              download
                             >
                               <FileText size={17} />
                             </a>
                             <a
                               title="Download invoice picture"
                               href={`${API_BASE}/api/orders/${order.id}/invoice.png`}
-                              target="_blank"
-                              rel="noreferrer"
+                              download
                             >
                               <FileText size={17} />
                             </a>
