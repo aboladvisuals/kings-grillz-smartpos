@@ -1,0 +1,35 @@
+name: Build Receipt Studio Windows
+
+on:
+  push:
+    branches: [feature/receipt-studio, main]
+    paths:
+      - "receipt-studio/**"
+      - ".github/workflows/receipt-studio-windows.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: receipt-studio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+      - name: Build Windows app
+        run: >
+          pyinstaller --noconfirm --windowed --name KingsGrillzReceiptStudio
+          --add-data "assets;assets"
+          kings_grillz/__main__.py
+      - name: Upload Windows app
+        uses: actions/upload-artifact@v4
+        with:
+          name: kings-grillz-receipt-studio-windows
+          path: receipt-studio/dist/KingsGrillzReceiptStudio
