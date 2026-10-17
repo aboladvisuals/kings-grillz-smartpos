@@ -3,6 +3,7 @@ package com.kingsgrillz.receiptstudio
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import androidx.activity.result.contract.ActivityResultContracts
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -18,6 +19,10 @@ import java.io.File
 
 class MainActivity : AppCompatActivity() {
     private lateinit var store: Store
+    private val restoreLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@registerForActivityResult
+        restore(uri)
+    }
     private lateinit var name: EditText
     private lateinit var phone: EditText
     private lateinit var product: EditText
@@ -59,6 +64,7 @@ class MainActivity : AppCompatActivity() {
         root.addView(button("Save PNG") { save("png") })
         root.addView(button("Share to WhatsApp") { save("share") })
         root.addView(button("Backup database") { backup() })
+        root.addView(button("Restore database") { restoreLauncher.launch(arrayOf("*/*")) })
         history = TextView(this).apply { textSize = 14f; setPadding(0, 24, 0, 0) }
         root.addView(history)
         setContentView(ScrollView(this).apply { addView(root) })
@@ -129,6 +135,23 @@ class MainActivity : AppCompatActivity() {
         }
         if (send.resolveActivity(packageManager) == null) send.setPackage(null)
         startActivity(Intent.createChooser(send, "Share receipt"))
+    }
+
+    private fun restore(uri: Uri) {
+        store.close()
+        val target = store.databaseFile(this)
+        File(target.path + "-wal").delete()
+        File(target.path + "-shm").delete()
+        contentResolver.openInputStream(uri)?.use { input ->
+            target.outputStream().use { output -> input.copyTo(output) }
+        } ?: run {
+            toast("Could not read the backup file")
+            store = Store(this)
+            return
+        }
+        store = Store(this)
+        refresh()
+        toast("History restored from backup")
     }
 
     private fun backup() {

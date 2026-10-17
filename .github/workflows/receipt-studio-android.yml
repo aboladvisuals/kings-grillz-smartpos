@@ -27,11 +27,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.7"
-      - name: Build debug APK
+      - name: Build release APK
         working-directory: android-receipt-studio
-        run: gradle assembleDebug --no-daemon
-      - name: Upload APK
+        run: gradle assembleRelease --no-daemon
+      - name: Upload unsigned release APK
         uses: actions/upload-artifact@v4
         with:
-          name: kings-grillz-receipt-studio-android
-          path: android-receipt-studio/app/build/outputs/apk/debug/app-debug.apk
+          name: kings-grillz-android-unsigned
+          path: android-receipt-studio/app/build/outputs/apk/release/app-release-unsigned.apk

@@ -45,8 +45,9 @@ Android stores receipts in the app's private files. Uninstalling the app deletes
 - You can also copy the whole `%APPDATA%\KingsGrillzReceiptStudio\` folder to a USB drive.
 
 ### Android
-- Tap Backup database and send the file to Drive, WhatsApp or a computer.
-- To recover after reinstall, keep that backup file. Restoring over a live database should be done only when you intend to replace the phone's history.
+- Tap **Backup database** and send `receipts-backup.db` to Drive, WhatsApp or a computer.
+- Tap **Restore database**, choose that `.db` file, and confirm. This replaces the phone's current history with the backup.
+- Restore only a backup made by this app. Windows backups are not interchangeable.
 
 ## Acceptance checklist
 
@@ -60,5 +61,6 @@ Android stores receipts in the app's private files. Uninstalling the app deletes
 - [ ] PDF can be attached (folder on Windows, share sheet on Android)
 - [ ] History shows the new document after restart
 - [ ] Backup file is created on each device
+- [ ] Android restore replaces history with the chosen backup
 - [ ] Windows number starts with `KG-`
 - [ ] Android number starts with `KGA-`
