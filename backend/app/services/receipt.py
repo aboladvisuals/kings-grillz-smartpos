@@ -18,6 +18,7 @@ from reportlab.platypus import (
     Spacer,
     Table,
     TableStyle,
+    Image,
 )
 
 
@@ -103,7 +104,14 @@ def generate_receipt(payment, order, customer):
         alignment=TA_CENTER,
     )
 
-    story = [
+    logo_path = Path(__file__).parent.parent / "assets" / "logo.png"
+    logo_elements = []
+    if logo_path.exists():
+        logo_elements = [
+            Image(str(logo_path), width=40*mm, height=40*mm, hAlign="CENTER"),
+            Spacer(1, 6*mm),
+        ]
+    story = logo_elements + [
         Paragraph("KING'S GRILLZ", title_style),
         Paragraph("YOUR PREMIUM AWO PLUG", center_style),
         Paragraph("33 Kayode Arikawe Street", center_style),

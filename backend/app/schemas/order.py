@@ -21,6 +21,7 @@ class OrderCreate(BaseModel):
 
     delivery_address: str | None = Field(default=None, max_length=255)
     delivery_fee: int = Field(default=0, ge=0, le=1000000000, strict=True)
+    unit_price: int | None = Field(default=None, ge=0, le=1000000000, strict=True)
 
     @model_validator(mode="after")
     def validate_delivery(self):

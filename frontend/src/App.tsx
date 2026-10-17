@@ -10,9 +10,10 @@ import type { Order, OrderDetails, Staff } from "./lib/api";
 import NewOrder from "./NewOrder";
 import PaymentPanel from "./PaymentPanel";
 import OrderStatusPanel from "./OrderStatusPanel";
+import ProductPricing from "./ProductPricing";
 import "./App.css";
 
-type Section = "dashboard" | "orders" | "payments" | "new-order";
+type Section = "dashboard" | "orders" | "payments" | "new-order" | "pricing";
 
 export default function App({ staff }: { staff: Staff }) {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -106,13 +107,13 @@ export default function App({ staff }: { staff: Staff }) {
   const title = section === "dashboard" ? "Dashboard"
     : section === "orders" ? "Order Management"
     : section === "payments" ? "Payment Overview"
-    : "Create New Order";
+    : section === "pricing" ? "Product Pricing" : "Create New Order";
 
   return (
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-icon"><Flame size={26} /></div>
+          <img src="/logo.png" alt="" style={{width: 48, height: 48, borderRadius: "50%"}} />
           <div><strong>KING'S GRILLZ</strong><span>SMARTPOS</span></div>
         </div>
 
@@ -143,6 +144,14 @@ export default function App({ staff }: { staff: Staff }) {
           >
             <Wallet size={19} /> Payments
           </button>
+          {staff.role === "admin" && (
+            <button
+              className={section === "pricing" ? "active" : ""}
+              onClick={() => setSection("pricing")}
+            >
+              <Wallet size={19} /> Pricing
+            </button>
+          )}
         </nav>
 
         <div className="sidebar-bottom">
@@ -174,7 +183,9 @@ export default function App({ staff }: { staff: Staff }) {
 
         {error && <div className="error-banner">{error}</div>}
 
-        {section === "new-order" ? (
+        {section === "pricing" && staff.role === "admin" ? (
+          <ProductPricing />
+        ) : section === "new-order" ? (
           <NewOrder
             onBack={() => setSection("dashboard")}
             onCreated={id => { void handleOrderCreated(id); }}
@@ -265,8 +276,16 @@ export default function App({ staff }: { staff: Staff }) {
                         <td>
                           <div className="row-actions">
                             <a
-                              title="Download invoice"
+                              title="Download invoice PDF"
                               href={`${API_BASE}/api/orders/${order.id}/invoice`}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <FileText size={17} />
+                            </a>
+                            <a
+                              title="Download invoice picture"
+                              href={`${API_BASE}/api/orders/${order.id}/invoice.png`}
                               target="_blank"
                               rel="noreferrer"
                             >

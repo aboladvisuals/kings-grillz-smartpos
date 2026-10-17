@@ -109,6 +109,7 @@ export default function StaffAccess() {
   </>;
   return <main className="staff-access">
     <form className="staff-login" onSubmit={signIn}>
+      <img src="/logo.png" alt="KING'S GRILLZ" style={{width: 96, height: 96, margin: "0 auto 1rem", display: "block"}} />
       <span className="eyebrow">KING'S GRILLZ SMARTPOS</span>
       <h1>Staff sign-in</h1>
       <p>Use your assigned staff account to manage orders.</p>
