@@ -6,6 +6,7 @@ import type { Staff, StaffSession } from "./lib/api";
 export default function StaffAccess() {
   const [staff, setStaff] = useState<Staff | null>(null);
   const [checking, setChecking] = useState(true);
+  const [starting, setStarting] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -25,16 +26,31 @@ export default function StaffAccess() {
       sessionChannel.current = new BroadcastChannel("kings-grillz-staff-session");
       sessionChannel.current.onmessage = event => { if (event.data === "signed-out") expired(); };
     }
-    apiGet<StaffSession>("/api/auth/me")
-      .then(session => {
-        if (active) { setCsrfToken(session.csrf_token); setStaff(session.staff); }
-      })
-      .catch(err => {
-        if (active && !(err instanceof ApiError && err.status === 401)) {
-          setError("Cannot reach the staff service. Check the server and try signing in again.");
+
+    async function checkSession() {
+      const delays = [0, 3000, 6000, 10000];
+      for (let attempt = 0; attempt < delays.length; attempt++) {
+        if (!active) return;
+        if (attempt > 0) {
+          setStarting(true);
+          await new Promise(resolve => setTimeout(resolve, delays[attempt]));
+          if (!active) return;
         }
-      })
-      .finally(() => { if (active) setChecking(false); });
+        try {
+          const session = await apiGet<StaffSession>("/api/auth/me");
+          if (active) { setCsrfToken(session.csrf_token); setStaff(session.staff); }
+          return;
+        } catch (err) {
+          if (!active) return;
+          if (err instanceof ApiError && err.status === 401) return;
+          if (attempt === delays.length - 1) {
+            setError("Cannot reach the staff service. Check the server and try signing in again.");
+          }
+        }
+      }
+    }
+
+    void checkSession().finally(() => { if (active) { setChecking(false); setStarting(false); } });
     return () => {
       active = false;
       window.removeEventListener("staff-session-expired", expired);
@@ -98,7 +114,7 @@ export default function StaffAccess() {
     }
   }
 
-  if (checking) return <main className="staff-access"><p role="status">Checking staff session…</p></main>;
+  if (checking) return <main className="staff-access"><p role="status">{starting ? "Starting the staff service… this can take up to 30 seconds on first load." : "Checking staff session…"}</p></main>;
   if (staff) return <>
     <div className="staff-session-bar">
       <span>Signed in as <strong>{staff.username}</strong> · {staff.role}</span>
