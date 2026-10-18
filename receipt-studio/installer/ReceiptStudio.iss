@@ -1,5 +1,5 @@
 #define MyAppName "KING'S GRILLZ Receipt Studio"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.0.1"
 #define MyAppPublisher "KING'S GRILLZ"
 #define MyAppExeName "KingsGrillzReceiptStudio.exe"
 
@@ -11,7 +11,7 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\KingsGrillzReceiptStudio
 DefaultGroupName={#MyAppName}
 OutputDir=output
-OutputBaseFilename=KingsGrillzReceiptStudio-Setup-1.0.0
+OutputBaseFilename=KingsGrillzReceiptStudio-Setup-1.0.1
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
