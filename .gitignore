@@ -27,3 +27,16 @@ coverage/
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Android signing and build outputs
+*.jks
+*.keystore
+*.apk
+*.aab
+local.properties
+
+# Windows build outputs
+receipt-studio/dist/
+receipt-studio/build/
+receipt-studio/installer/output/
+*.exe
