@@ -2,7 +2,7 @@ name: Build Receipt Studio Android
 
 on:
   push:
-    branches: [main, feature/receipt-studio]
+    branches: [main, feature/receipt-studio, feature/v1.0.1]
     paths:
       - "android-receipt-studio/**"
       - ".github/workflows/receipt-studio-android.yml"
@@ -14,6 +14,8 @@ jobs:
     env:
       ANDROID_HOME: /usr/local/lib/android/sdk
       ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      # Expected SHA256 of the v1.0.0 signing certificate (public, not a secret).
+      EXPECTED_CERT_SHA256: "F8856466EB4121CB7A343ACAF67E750AEA018E94574F8911B6CD99DC5EB53C6A"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -30,7 +32,55 @@ jobs:
       - name: Build release APK
         working-directory: android-receipt-studio
         run: gradle assembleRelease --no-daemon
-      - name: Upload unsigned release APK
+      - name: Sign release APK
+        id: sign
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          UNSIGNED="android-receipt-studio/app/build/outputs/apk/release/app-release-unsigned.apk"
+          SIGNED="android-receipt-studio/app/build/outputs/apk/release/KingsGrillzReceiptStudio-1.0.1.apk"
+          if [ -z "${KEYSTORE_BASE64:-}" ] || [ -z "${KEYSTORE_PASSWORD:-}" ] || [ -z "${KEY_ALIAS:-}" ] || [ -z "${KEY_PASSWORD:-}" ]; then
+            echo "Signing secrets are not configured. Uploading unsigned APK only."
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Signing with configured secrets (values are not printed)."
+          TMP_KS="$(mktemp)"
+          echo "$KEYSTORE_BASE64" | base64 -d > "$TMP_KS"
+          APKSIGNER="$ANDROID_HOME/build-tools/34.0.0/apksigner"
+          "$APKSIGNER" sign \
+            --ks "$TMP_KS" \
+            --ks-pass "pass:$KEYSTORE_PASSWORD" \
+            --ks-key-alias "$KEY_ALIAS" \
+            --key-pass "pass:$KEY_PASSWORD" \
+            --out "$SIGNED" \
+            "$UNSIGNED"
+          # Verify certificate matches v1.0.0 (fail if a different key was used)
+          ACTUAL=$("$APKSIGNER" verify --print-certs "$SIGNED" | awk '/Signer #1 certificate SHA-256 digest:/ {print $NF}' | tr -d ':')
+          ACTUAL_CLEAN=$(echo "$ACTUAL" | tr '[:lower:]' '[:upper:]')
+          EXPECTED_CLEAN=$(echo "$EXPECTED_CERT_SHA256" | tr '[:lower:]' '[:upper:]')
+          if [ "$ACTUAL_CLEAN" != "$EXPECTED_CLEAN" ]; then
+            echo "Certificate mismatch. This APK was not signed with the v1.0.0 key."
+            echo "Expected: $EXPECTED_CLEAN"
+            echo "Actual:   $ACTUAL_CLEAN"
+            rm -f "$TMP_KS"
+            exit 1
+          fi
+          echo "Certificate matches v1.0.0."
+          rm -f "$TMP_KS"
+          echo "signed=true" >> "$GITHUB_OUTPUT"
+      - name: Upload signed APK
+        if: steps.sign.outputs.signed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: kings-grillz-android-signed
+          path: android-receipt-studio/app/build/outputs/apk/release/KingsGrillzReceiptStudio-1.0.1.apk
+      - name: Upload unsigned APK
+        if: steps.sign.outputs.signed != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: kings-grillz-android-unsigned
