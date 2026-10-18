@@ -45,6 +45,9 @@ class Settings:
     delivery_fee: int = DEFAULT_DELIVERY_FEE
     business_phone: str = ""
     business_note: str = "Thank you for choosing KING'S GRILLZ!"
+    bank_name: str = "PalmPay"
+    account_name: str = "Kings Grillz Ventures"
+    account_number: str = "9552604707"
 
 
 class Connection(sqlite3.Connection):

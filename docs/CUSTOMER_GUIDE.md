@@ -1,8 +1,16 @@
 # KING'S GRILLZ Receipt Studio — Customer Guide
 
-Offline invoices and receipts for Windows and Android, version 1.0.0. No login and no internet are required to create a receipt.
+Offline invoices and receipts for Windows and Android, version 1.0.1. No login and no internet are required.
 
-Release: https://github.com/aboladvisuals/kings-grillz-smartpos/releases/tag/v1.0.0
+## What's new in 1.0.1
+
+- Windows invoices now include a professional PalmPay payment details section.
+- Android invoices have been redesigned to match a commercial business invoice, including payment details.
+- Android PNG can be saved directly to the phone Gallery.
+- Business owner can edit bank name, account name and account number in Settings (Windows) or Payment settings (Android).
+- Receipts are unchanged and do not show bank details.
+- Existing history is preserved. Install as an update — do not uninstall.
+
 
 ## Important: records are separate
 

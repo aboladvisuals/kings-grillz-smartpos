@@ -450,10 +450,16 @@ class Studio(QMainWindow):
         self.set_fee.setValue(self.settings.delivery_fee)
         self.set_fee.setSuffix(" ₦")
         self.set_phone = QLineEdit(self.settings.business_phone)
+        self.set_bank = QLineEdit(self.settings.bank_name)
+        self.set_account_name = QLineEdit(self.settings.account_name)
+        self.set_account_number = QLineEdit(self.settings.account_number)
         form.addRow("Default product", self.set_product)
         form.addRow("Default unit price", self.set_price)
         form.addRow("Default delivery fee", self.set_fee)
         form.addRow("Business phone", self.set_phone)
+        form.addRow("Bank name", self.set_bank)
+        form.addRow("Account name", self.set_account_name)
+        form.addRow("Account number", self.set_account_number)
         layout.addLayout(form)
         save = QPushButton("Save settings")
         save.clicked.connect(self.save_business_settings)
@@ -471,6 +477,10 @@ class Studio(QMainWindow):
             unit_price=self.set_price.value(),
             delivery_fee=self.set_fee.value(),
             business_phone=self.set_phone.text().strip(),
+            business_note=self.settings.business_note,
+            bank_name=self.set_bank.text().strip() or "PalmPay",
+            account_name=self.set_account_name.text().strip() or "Kings Grillz Ventures",
+            account_number=self.set_account_number.text().strip() or "9552604707",
         )
         save_settings(self.settings)
         self.product.setText(self.settings.product_name)

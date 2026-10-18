@@ -19,7 +19,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from .database import Document
+from .database import Document, load_settings
 from .paths import logo_path
 
 
@@ -34,7 +34,7 @@ def naira(amount: int) -> str:
     return f"₦{amount:,.0f}"
 
 
-def build_pdf(doc: Document) -> bytes:
+def build_pdf(doc: Document, bank_name: str = "", account_name: str = "", account_number: str = "") -> bytes:
     buffer = BytesIO()
     is_paid = doc.payment_status == "paid"
     title = "RECEIPT" if is_paid else "INVOICE"
@@ -130,13 +130,49 @@ def build_pdf(doc: Document) -> bytes:
     if doc.notes:
         story.append(Spacer(1, 4 * mm))
         story.append(Paragraph(f"Notes: {doc.notes}", styles["label"]))
+    # Payment details on invoices only (not receipts)
+    if not is_paid and (bank_name or account_name or account_number):
+        story.append(Spacer(1, 6 * mm))
+        story.append(Paragraph("PAYMENT DETAILS", styles["value"]))
+        pay_rows = [
+            ["Bank", bank_name or "—"],
+            ["Account name", account_name or "—"],
+            ["Account number", account_number or "—"],
+        ]
+        pay_table = Table(pay_rows, colWidths=[50 * mm, 110 * mm])
+        pay_table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), CREAM),
+            ("BOX", (0, 0), (-1, -1), 0.6, GOLD),
+            ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ("TOPPADDING", (0, 0), (-1, -1), 4),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ]))
+        story.append(pay_table)
+        story.append(Spacer(1, 3 * mm))
+        story.append(Paragraph(
+            "Please use your invoice number as the payment reference.",
+            styles["label"],
+        ))
+        story.append(Paragraph(
+            "An unpaid invoice is not proof of payment.",
+            styles["label"],
+        ))
     story.append(Spacer(1, 6 * mm))
     story.append(Paragraph("Thank you for choosing KING'S GRILLZ!", styles["thanks"]))
+
     story_doc.build(story)
     return buffer.getvalue()
 
 
-def write_pdf(doc: Document, destination: Path) -> Path:
+def write_pdf(doc: Document, destination: Path, bank_name: str = "", account_name: str = "", account_number: str = "") -> Path:
+    if not (bank_name or account_name or account_number):
+        try:
+            s = load_settings()
+            bank_name, account_name, account_number = s.bank_name, s.account_name, s.account_number
+        except Exception:
+            pass
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_bytes(build_pdf(doc))
+    destination.write_bytes(build_pdf(doc, bank_name, account_name, account_number))
     return destination

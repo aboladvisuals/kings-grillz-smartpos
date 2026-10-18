@@ -6,7 +6,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
-from .database import Document
+from .database import Document, load_settings
 from .paths import logo_path
 from .pdf import naira
 
@@ -30,8 +30,8 @@ def _font(size: int, bold: bool = False) -> ImageFont.ImageFont:
     return ImageFont.load_default()
 
 
-def build_png(doc: Document) -> Image.Image:
-    width, height = 900, 1280
+def build_png(doc: Document, bank_name: str = "", account_name: str = "", account_number: str = "") -> Image.Image:
+    width, height = 900, 1500
     image = Image.new("RGB", (width, height), CREAM)
     draw = ImageDraw.Draw(image)
     draw.rectangle((0, 0, width, 16), fill=GOLD)
@@ -77,13 +77,34 @@ def build_png(doc: Document) -> Image.Image:
         y += 10
         draw.text((70, y), f"Notes: {doc.notes}", fill=BLACK, font=_font(16), anchor="lm")
         y += 40
+    # Payment details on invoices only
+    if not is_paid and (bank_name or account_name or account_number):
+        y += 16
+        draw.rectangle((60, y - 8, width - 60, y + 150), outline=GOLD, width=2)
+        draw.text((width // 2, y + 8), "PAYMENT DETAILS", fill=GOLD, font=_font(18, True), anchor="mm")
+        y += 36
+        for label, value in (("Bank", bank_name), ("Account name", account_name), ("Account number", account_number)):
+            draw.text((80, y), label, fill=(102, 102, 102), font=_font(16), anchor="lm")
+            draw.text((width - 80, y), value or "—", fill=BLACK, font=_font(16, True), anchor="rm")
+            y += 28
+        y += 8
+        draw.text((80, y), "Use your invoice number as the payment reference.", fill=BLACK, font=_font(14), anchor="lm")
+        y += 24
+        draw.text((80, y), "An unpaid invoice is not proof of payment.", fill=ORANGE, font=_font(14, True), anchor="lm")
+        y += 30
     y += 20
     draw.text((width // 2, y), "Thank you for choosing KING'S GRILLZ!", fill=GOLD, font=_font(18, True), anchor="mm")
     draw.rectangle((0, height - 16, width, height), fill=GOLD)
     return image
 
 
-def write_png(doc: Document, destination: Path) -> Path:
+def write_png(doc: Document, destination: Path, bank_name: str = "", account_name: str = "", account_number: str = "") -> Path:
+    if not (bank_name or account_name or account_number):
+        try:
+            s = load_settings()
+            bank_name, account_name, account_number = s.bank_name, s.account_name, s.account_number
+        except Exception:
+            pass
     destination.parent.mkdir(parents=True, exist_ok=True)
-    build_png(doc).save(destination, "PNG")
+    build_png(doc, bank_name, account_name, account_number).save(destination, "PNG")
     return destination

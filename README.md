@@ -1,6 +1,6 @@
 # KING'S GRILLZ Receipt Studio
 
-Offline invoices and receipts for a Nigerian smoked guinea fowl business. Version 1.0.0 was accepted by the client.
+Offline invoices and receipts for a Nigerian smoked guinea fowl business. Version 1.0.1 is the current maintenance release. 1.0.0 remains available.
 
 No login, internet, or cloud service is required to create, save, or reprint a receipt.
 

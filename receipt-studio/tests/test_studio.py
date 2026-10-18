@@ -102,9 +102,20 @@ class StudioTests(unittest.TestCase):
         self.assertEqual(naira(14000), "₦14,000")
 
 
-if __name__ == "__main__":
-    unittest.main()
 
+
+
+    def test_bank_settings_defaults_and_persist(self):
+        from kings_grillz.database import Settings, load_settings, save_settings
+        s = load_settings(self.db)
+        self.assertEqual(s.bank_name, "PalmPay")
+        self.assertEqual(s.account_number, "9552604707")
+        s.bank_name = "Test Bank"
+        s.account_number = "1234567890"
+        save_settings(s, self.db)
+        again = load_settings(self.db)
+        self.assertEqual(again.bank_name, "Test Bank")
+        self.assertEqual(again.account_number, "1234567890")
 
 class ShareTests(unittest.TestCase):
     def test_nigerian_local_number(self):
@@ -130,3 +141,6 @@ class ShareTests(unittest.TestCase):
         self.assertIn("KG-20261017-0001", text)
         self.assertIn("₦14,000", text)
         self.assertIn("Ada", text)
+
+if __name__ == "__main__":
+    unittest.main()

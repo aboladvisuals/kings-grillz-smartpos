@@ -29,6 +29,12 @@ data class Receipt(
     val createdAt: String,
 )
 
+data class BusinessSettings(
+    val bankName: String = "PalmPay",
+    val accountName: String = "Kings Grillz Ventures",
+    val accountNumber: String = "9552604707",
+)
+
 class Store(context: Context) : SQLiteOpenHelper(context, "receipts.db", null, 1) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -134,6 +140,28 @@ class Store(context: Context) : SQLiteOpenHelper(context, "receipts.db", null, 1
         }
         cursor.close()
         return items
+    }
+
+    fun loadSettings(): BusinessSettings {
+        val cursor = readableDatabase.rawQuery("SELECT value FROM settings WHERE key = ?", arrayOf("bank"))
+        val raw = if (cursor.moveToFirst()) cursor.getString(0) else null
+        cursor.close()
+        if (raw.isNullOrBlank()) return BusinessSettings()
+        val parts = raw.split("|")
+        return BusinessSettings(
+            bankName = parts.getOrNull(0)?.ifBlank { "PalmPay" } ?: "PalmPay",
+            accountName = parts.getOrNull(1)?.ifBlank { "Kings Grillz Ventures" } ?: "Kings Grillz Ventures",
+            accountNumber = parts.getOrNull(2)?.ifBlank { "9552604707" } ?: "9552604707",
+        )
+    }
+
+    fun saveSettings(settings: BusinessSettings) {
+        val value = "${settings.bankName}|${settings.accountName}|${settings.accountNumber}"
+        val values = ContentValues().apply {
+            put("key", "bank")
+            put("value", value)
+        }
+        writableDatabase.insertWithOnConflict("settings", null, values, SQLiteDatabase.CONFLICT_REPLACE)
     }
 
     fun databaseFile(context: Context): File = context.getDatabasePath("receipts.db")

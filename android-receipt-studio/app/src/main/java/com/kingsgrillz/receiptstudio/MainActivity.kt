@@ -63,6 +63,7 @@ class MainActivity : AppCompatActivity() {
         root.addView(button("Save PDF") { save("pdf") })
         root.addView(button("Save PNG") { save("png") })
         root.addView(button("Share to WhatsApp") { save("share") })
+        root.addView(button("Payment settings") { showPaymentSettings() })
         root.addView(button("Backup database") { backup() })
         root.addView(button("Restore database") { restoreLauncher.launch(arrayOf("*/*")) })
         history = TextView(this).apply { textSize = 14f; setPadding(0, 24, 0, 0) }
@@ -118,9 +119,16 @@ class MainActivity : AppCompatActivity() {
         val saved = store.save(draft)
         val folder = File(getExternalFilesDir(null), "exports").apply { mkdirs() }
         val pdf = writePdf(this, saved, File(folder, "${saved.number}.pdf"))
-        if (mode == "png") writePng(this, saved, File(folder, "${saved.number}.png"))
+        if (mode == "png") {
+            val png = writePng(this, saved, File(folder, "${saved.number}.png"))
+            val ok = saveToGallery(this, png, "${saved.number}.png")
+            toast(if (ok) "Saved to Gallery: ${saved.number}" else "Saved in app, gallery failed")
+        } else if (mode == "share") {
+            share(saved, pdf)
+        } else {
+            toast("Saved ${saved.number}")
+        }
         refresh()
-        if (mode == "share") share(saved, pdf) else toast("Saved ${saved.number}")
     }
 
     private fun share(doc: Receipt, pdf: File) {
@@ -171,6 +179,36 @@ class MainActivity : AppCompatActivity() {
         history.text = store.list().joinToString("\n") {
             "${it.number}  ${it.customerName}  ${naira(it.total)}  ${it.paymentStatus.uppercase()}"
         }.ifBlank { "No receipts yet." }
+    }
+
+    private fun showPaymentSettings() {
+        val current = store.loadSettings()
+        val bank = EditText(this).apply { setText(current.bankName); hint = "Bank name" }
+        val account = EditText(this).apply { setText(current.accountName); hint = "Account name" }
+        val number = EditText(this).apply { setText(current.accountNumber); hint = "Account number" }
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(40, 20, 40, 0)
+            addView(bank)
+            addView(account)
+            addView(number)
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Payment details")
+            .setView(layout)
+            .setPositiveButton("Save") { _, _ ->
+                val b = bank.text.toString().trim().ifBlank { "PalmPay" }
+                val a = account.text.toString().trim().ifBlank { "Kings Grillz Ventures" }
+                val n = number.text.toString().trim()
+                if (n.length < 6 || !n.all { it.isDigit() }) {
+                    toast("Account number should be at least 6 digits")
+                    return@setPositiveButton
+                }
+                store.saveSettings(BusinessSettings(b, a, n))
+                toast("Payment details saved")
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun toast(text: String) = Toast.makeText(this, text, Toast.LENGTH_LONG).show()
