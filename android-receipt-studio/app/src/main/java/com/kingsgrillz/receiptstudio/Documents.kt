@@ -154,10 +154,13 @@ fun writePng(context: Context, doc: Receipt, destination: File): File {
     val status = if (isPaid) "PAID" else "UNPAID"
     canvas.drawText(heading, 450f, y, black.apply { textSize = 32f; typeface = Typeface.DEFAULT_BOLD })
     y += 40
-    canvas.drawText(status, 450f, black.apply {
+    val statusPaint = Paint().apply {
         textSize = 22f
+        typeface = Typeface.DEFAULT_BOLD
+        textAlign = Paint.Align.CENTER
         color = if (isPaid) Color.rgb(27, 122, 58) else Color.rgb(230, 107, 36)
-    }.also { canvas.drawText(status, 450f, y, it) })
+    }
+    canvas.drawText(status, 450f, y, statusPaint)
     y += 50
 
     val label = Paint().apply { color = Color.rgb(102, 102, 102); textSize = 20f; textAlign = Paint.Align.LEFT }
