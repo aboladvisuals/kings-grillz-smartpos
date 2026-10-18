@@ -1,116 +1,72 @@
 # KING'S GRILLZ Receipt Studio — Case Study
 
-**Client:** a Nigerian premium smoked guinea fowl business  
-**Product delivered:** offline Windows and Android receipt applications, v1.0.0  
-**Outcome:** accepted by the client for daily invoice and receipt work  
-**Repository:** https://github.com/aboladvisuals/kings-grillz-smartpos  
-**Release:** https://github.com/aboladvisuals/kings-grillz-smartpos/releases/tag/v1.0.0
+A short account of an offline invoice and receipt system built for a Nigerian smoked guinea fowl business. Suitable for a portfolio or a technical introduction. No performance statistics, revenue figures or testimonials are claimed.
 
-## Business problem
+## Client problem
 
-Staff needed to issue a branded invoice or a paid receipt at the point of sale, then send it to the customer on WhatsApp. The catalogue was simple: Signature Smoked Guinea Fowl at a default of ₦14,000, prepared Whole or Chopped, collected by Pickup or Delivery.
+Staff needed to produce a branded invoice or receipt for each order. The first version of the product was a cloud system: a React frontend, a FastAPI backend and PostgreSQL on Render, with Tauri and Capacitor shells that loaded the live website. That design kept one shared database, but every document depended on the hosted services. Free-tier cold starts made login unreliable. A desktop or phone that could not reach the server could not produce a receipt.
 
-An early cloud system could do this, but it depended on a hosted website, an API, and a PostgreSQL database. Free-tier cold starts made login unreliable. A desktop or phone that could not reach the server could not produce a receipt. The business needed a tool that worked with no internet and no staff login.
+The business needed a tool that works with no internet and no staff login, on both a Windows PC and an Android phone.
 
-## Requirements that shipped
+## Solution
 
-- Branded invoice and receipt, with a clear unpaid versus paid distinction
-- Never mark an invoice paid unless staff explicitly choose to
-- Editable product price and delivery charge, without changing historical documents
-- PDF and PNG export with the official logo
-- WhatsApp sharing of the document number, total, and the PDF
-- Local history, search, and reprint
-- Backup and restore
-- Windows installer and a signed Android APK
-- No login, no API, and no cloud dependency for core work
+Receipt Studio is two independent offline applications that share branding and workflow but not data.
 
-## First architecture: cloud SmartPOS
+- Create an unpaid invoice or a paid receipt. An invoice is never marked paid unless staff explicitly choose to.
+- Product defaults to Signature Smoked Guinea Fowl at ₦14,000. Whole or Chopped. Pickup or Delivery.
+- Editable unit price and delivery fee. Historical documents keep the prices they were created with.
+- Branded PDF and PNG with the official logo.
+- Local history, search and reprint.
+- Backup and restore on each device.
+- WhatsApp sharing of the document number, total and the PDF.
+- Editable PalmPay payment details on invoices only. Receipts do not show bank details.
 
-The first product was a same-origin web system:
+Windows and Android do not sync. Each device keeps its own SQLite history. Document numbers are prefixed so the two histories cannot be confused: `KG-` on Windows, `KGA-` on Android.
 
-- React and Vite frontend
-- FastAPI backend
-- PostgreSQL on Render
-- nginx proxy so the browser called `/api` and kept cookie sessions
-- Tauri desktop shell and a Capacitor Android shell that loaded the live website
-
-That design protected staff routes and kept one database of customers and orders. It also tied every receipt to the hosted services. When those services were cold or unreachable, the apps failed. Native packaging added a second problem: relative API calls inside a desktop or phone shell did not behave like the browser.
-
-That cloud product is preserved, not deleted:
-
-- Branch `archive/smartpos-cloud-2026-10-17`
-- Tag `archive-smartpos-cloud-2026-10-17`
-- Render services and the production database were left in place
-
-## Migration: offline Receipt Studio
-
-The active product is two local applications that share branding and business rules, not a database.
-
-**Windows** is a Python application:
-
-- PySide6 for the interface
-- ReportLab for PDF
-- Pillow for PNG
-- SQLite for history and settings
-- PyInstaller for the executable
-- Inno Setup for the installer
-- Writable data in `%APPDATA%\KingsGrillzReceiptStudio\`, not inside the install folder
-
-**Android** is a Kotlin application:
-
-- Local SQLite
-- Android `PdfDocument` and bitmap export
-- Native share sheet, so WhatsApp can receive the PDF when the device supports it
-- Receipt numbers prefixed `KGA-` so they cannot collide with Windows `KG-` numbers
-
-Core generation does not call Render, does not log in, and does not need a network. Opening WhatsApp is the only step that uses the internet.
-
-## Implemented features
-
-- Official logo and brand colours on screen and on documents
-- Invoice stays unpaid; receipt is created only when staff choose paid, or when they explicitly mark an invoice paid
-- Default product and price, with delivery fee applied only for Delivery
-- PDF and PNG that include document number, customer, preparation, fulfilment, totals, and paid or unpaid status
-- Windows Save As to any folder; history still kept in AppData
-- Windows WhatsApp flow prepares the number and message, then opens the PDF folder because Windows cannot attach the file automatically
-- Android WhatsApp flow uses the system share sheet with the PDF attached where the target app accepts it
-- Searchable local history and reprint
-- Backup and restore on each platform
-- Automated Windows tests for numbering, unpaid versus paid, settings, PDF and PNG output, and backup
-- Windows packaged executable smoke-tested in CI before the installer was published
-- Signed Android release APK, not a debug build
-- Versioned GitHub Release v1.0.0 containing both customer installers
-
-## Release and handover
-
-v1.0.0 was published with:
-
-- `KingsGrillzReceiptStudio-Setup-1.0.0.exe`
-- `KingsGrillzReceiptStudio-1.0.0.apk`
-
-The client accepted both applications after manual testing. Customer instructions are in `docs/CUSTOMER_GUIDE.md`. A retirement checklist for the old Render services exists and has not been executed.
-
-## What was deliberately not done
-
-These are future possibilities, not delivered features:
-
-- Sync between Windows and Android
-- Multi-user login or roles in Receipt Studio
-- Automatic attachment of the PDF inside the Windows WhatsApp window
-- Migration of historical cloud orders into the offline apps
-- Shutdown or deletion of Render or the production PostgreSQL database
-- Play Store distribution
-
-Windows and Android histories remain separate unless a future sync is explicitly built.
-
-## Stack summary
+## Technical architecture
 
 | Concern | Choice |
 | --- | --- |
-| Windows UI | PySide6 |
-| Windows documents | ReportLab, Pillow |
+| Windows UI | Python 3.12, PySide6 |
+| Windows documents | ReportLab (PDF), Pillow (PNG) |
 | Windows packaging | PyInstaller, Inno Setup |
-| Android UI and documents | Kotlin, PdfDocument |
-| Persistence | SQLite on each device |
-| Sharing | WhatsApp link on Windows; Android share sheet |
-| Old cloud system | React, FastAPI, PostgreSQL, Tauri, Capacitor — archived |
+| Android UI | Kotlin, Android SDK 34 |
+| Android documents | PdfDocument, Canvas PNG |
+| Android gallery | MediaStore (Pictures/KingsGrillz) |
+| Storage | SQLite on each device |
+| Branding | Official circular logo. Black `#171717`, gold `#D9A441`, orange `#E66B24`, cream `#FAF7F0` |
+
+Writable data never lives inside the install folder. On Windows it is in `%APPDATA%\KingsGrillzReceiptStudio\`. On Android it is in the app's private files. The Windows installer upgrades in place and does not touch that folder. The Android APK uses the same application ID and signing certificate as v1.0.0, so it installs as an update.
+
+## Development process
+
+1. The cloud SmartPOS was built and deployed. Cold starts and native packaging showed that a hosted dependency was the wrong fit for receipt work.
+2. Receipt Studio was built as a separate offline product. The cloud system was archived, not deleted.
+3. v1.0.0 was delivered: Windows installer and a signed Android APK. The customer began using both.
+4. v1.0.1 added PalmPay details on invoices, a redesigned Android invoice, Android Gallery saving, and editable payment settings. Existing SQLite histories were preserved. No new signing key was generated.
+5. The customer accepted the Android application. The Windows installer was installed successfully.
+
+## Security considerations
+
+- No login and no network are required for core work. There is no staff password to leak and no API token in the apps.
+- Payment details are stored locally and are editable by the business owner. They are not hardcoded into document rendering without a way to change them.
+- The Android signing keystore is not in the repository. It was delivered outside Git and can be used through GitHub Actions secrets without appearing in code, logs or artifacts.
+- The published v1.0.1 APK certificate matches v1.0.0 (SHA256 `F8:85:64:66:EB:41:21:CB:7A:34:3A:CA:F6:7E:75:0A:EA:01:8E:94:57:4F:89:11:B6:CD:99:DC:5E:B5:3C:6A`).
+- Uninstalling an app can erase its local history. Staff are instructed to back up before uninstalling.
+
+## Delivery
+
+| Release | Contents |
+| --- | --- |
+| v1.0.0 | Windows installer and signed Android APK. Offline invoices, receipts, PDF, PNG, history, backup, WhatsApp. |
+| v1.0.1 | Same identity. PalmPay section on invoices, redesigned Android invoice, Gallery save, editable payment settings. |
+
+Downloads: [v1.0.1](https://github.com/aboladvisuals/kings-grillz-smartpos/releases/tag/v1.0.1).
+
+## Business benefits
+
+Staff can produce a branded invoice or receipt on the shop PC or a phone without waiting for a server. Payment details can be updated without a developer. Existing records survive upgrades. Windows and Android remain independent, so a problem on one device does not block the other.
+
+## Not claimed
+
+No revenue increase, conversion rate or customer testimonial is stated. Those were not measured as part of this delivery.
